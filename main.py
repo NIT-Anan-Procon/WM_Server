@@ -4,7 +4,6 @@ from tornado.options import define, options
 from datetime import datetime
 import logging
 import psycopg2
-import urlparse2 as urlparse
 import os.path
 import tornado.escape
 import tornado.httpserver
