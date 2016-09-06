@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>home</title>
+  </head>
+  <body>
+    <h1>HOME</h1>
+    {% for u in u_data %}
+      {{u}}
+    {% end %}
+    <br>
+    {% for m in messages %}
+      From: {{m[0]}}<br>
+      To: {{m[1]}}<br>
+      Title: {{m[2]}}<br>
+      Text: <br>{{m[3]}}<br>
+      Date: {{m[4]}}<br>
+    {% end %}
+    <br>
+  </body>
+</html>

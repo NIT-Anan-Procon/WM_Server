@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+    </head>
+    <body>
+        <h1>Form</h1>
+
+        <form action="/form" method="post">
+            {% module xsrf_form_html() %}
+            <p>To：<select name="reader">
+            {% for d in users_name %}
+                <option value={{d[0]}}>{{d[2]+" | "+d[0]}}</option>
+            {% end %}
+            </select></p>
+            <p>タイトル：<input type="text" name="title" size="40"></p>
+            <p>コメント：<br>
+                <textarea name="text" rows="10" cols="40"></textarea>
+            </p>
+            <p><input type="submit" value="送信"></p>
+        </form>
+    </body>
+</html>
