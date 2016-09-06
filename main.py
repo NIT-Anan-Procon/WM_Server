@@ -24,13 +24,24 @@ define("port", default=5000, help="run on the given port", type=int)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/([^/]+)?", MainHandler)
+            (r"/([^/]+)?", MainHandler),
+			(r"/test", TestHandler)
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             debug=True,
         )
+        urlparse.uses_netloc.append("postgres")
+		url = urlparse.urlparse(os.environ.get("DATABASE_URL",
+                        'postgresql://haruka@localhost/wm'))
+		self.conn = psycopg2.connect(
+    		database=url.path[1:],
+    		user=url.username,
+    		password=url.password,
+    		host=url.hostname,
+    		port=url.port
+    	)
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
@@ -49,6 +60,17 @@ class MainHandler(tornado.web.RequestHandler):
             google_analytics_id=google_analytics_id,
         )
 
+
+# the test page
+class TestHandler(tornado.web.RequestHandler):
+    def get(self):
+        cur = self.application.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from test")
+        rows = cur.fetchall()
+        self.render(
+            "test.html",
+            rows=rows
+        )
 
 # RAMMING SPEEEEEEED!
 def main():
