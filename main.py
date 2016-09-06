@@ -5,7 +5,6 @@ from datetime import datetime
 import logging
 import psycopg2
 import urlparse2 as urlparse
-#import db
 import os.path
 import tornado.escape
 import tornado.httpserver
@@ -95,7 +94,6 @@ class AuthLoginHandler(BaseHandler):
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % username)
         rows = cur.fetchall()
-        print(rows[0])
 
         if rows[0] != None:
           if password == rows[0][1]:
@@ -123,7 +121,6 @@ class HomeHandler(BaseHandler):
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
         rows = cur.fetchall()
-        print(rows[0])
         my_data = rows[0]       ##### (1)
         cur.execute("select * from messages where reader_id = '%s'" % c_user)
         msg_data = cur.fetchall()       ##### (2)
