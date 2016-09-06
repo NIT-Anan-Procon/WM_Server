@@ -16,6 +16,7 @@ import tornado.options
 import tornado.web
 import urlparse
 import psycopg2
+import psycopg2.extras
 
 # import and define tornado-y things
 from tornado.options import define
@@ -26,8 +27,8 @@ define("port", default=5000, help="run on the given port", type=int)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/([^/]+)?", MainHandler),
-			(r"/test", TestHandler)
+            (r"/", MainHandler),
+			(r"/test", TestHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -48,17 +49,9 @@ class Application(tornado.web.Application):
 
 # the main page
 class MainHandler(tornado.web.RequestHandler):
-    def get(self, q):
-        if 'GOOGLEANALYTICSID' in os.environ:
-            google_analytics_id = os.environ['GOOGLEANALYTICSID']
-        else:
-            google_analytics_id = False
-
+    def get(self):
         self.render(
             "main.html",
-            page_title='Heroku Funtimes',
-            page_heading='Hi!',
-            google_analytics_id=google_analytics_id,
         )
 
 
@@ -66,7 +59,7 @@ class MainHandler(tornado.web.RequestHandler):
 class TestHandler(tornado.web.RequestHandler):
     def get(self):
         cur = self.application.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("select * from test")
+        cur.execute("select * from users")
         rows = cur.fetchall()
         self.render(
             "test.html",
