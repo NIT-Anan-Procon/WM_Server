@@ -29,6 +29,7 @@ class Application(tornado.web.Application):
             (r'/', MainHandler),
             (r'/auth/login', AuthLoginHandler),
             (r'/auth/logout', AuthLogoutHandler),
+            (r'/auth/signup', SignUpHandler),
             (r'/home',HomeHandler),
             (r'/form',FormHandler),
 
@@ -97,7 +98,7 @@ class AuthLoginHandler(BaseHandler):
         if rows[0] != None:
           if password == rows[0][1]:
             self.set_current_user(username)
-            self.redirect("/")
+            self.redirect("/home")
         else:
             self.write_error(403)
 
@@ -106,7 +107,7 @@ class AuthLogoutHandler(BaseHandler):
 
     def get(self):
         self.clear_current_user()
-        self.redirect('/')
+        self.redirect('/home')
 
 
 
@@ -160,6 +161,27 @@ class FormHandler(BaseHandler):
         conn.commit()
         logging.debug("INSERT END!!")
         self.redirect('/form')
+
+
+class SignUpHandler(BaseHandler):
+    def get(self):
+        self.render("sign_up.html",
+                    )
+
+    def post(self): 
+        u_name = self.get_argument("name")
+        u_mail = self.get_argument("mail")
+        u_password = self.get_argument("password")
+        u_school = self.get_argument("school")
+        u_pos = self.get_argument("pos")
+
+        conn = self.application.conn
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        sql = """insert into users values('%s','%s','%s','%s','%s');"""
+        cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos))
+        conn.commit()
+        logging.debug("INSERT END!!")
+        self.redirect('/home')
 
 
 #######################################################################
