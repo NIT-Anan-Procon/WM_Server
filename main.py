@@ -14,6 +14,8 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
+import urlparse
+import psycopg2
 
 # import and define tornado-y things
 from tornado.options import define
@@ -33,11 +35,10 @@ class Application(tornado.web.Application):
             debug=True,
         )
         urlparse.uses_netloc.append("postgres")
-		url = urlparse.urlparse(os.environ.get("DATABASE_URL",
-                        'postgresql://haruka@localhost/wm'))
-		self.conn = psycopg2.connect(
-    		database=url.path[1:],
-    		user=url.username,
+        url = urlparse.urlparse(os.environ.get("DATABASE_URL",'postgresql://haruka@localhost/wm'))
+        self.conn = psycopg2.connect(
+            database=url.path[1:],
+    	    user=url.username,
     		password=url.password,
     		host=url.hostname,
     		port=url.port

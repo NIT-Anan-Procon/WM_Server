@@ -1,1 +1,7 @@
-Tornado>=3
+backports-abc==0.4
+certifi==2016.8.31
+dj-database-url==0.4.1
+psycopg2==2.6.2
+singledispatch==3.4.0.3
+six==1.10.0
+tornado==4.4.1
