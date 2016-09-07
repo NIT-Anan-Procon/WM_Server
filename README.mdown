@@ -4,4 +4,4 @@
 ####言語：Python Tornado
 ####PaaS：heroku
 ####DB：PostgreSQL
-####URL：https://dashboard.heroku.com/apps/fathomless-spire-60910
+####URL：https://fathomless-spire-60910.herokuapp.com/auth/login?next=%2F
