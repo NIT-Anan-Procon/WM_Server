@@ -75,8 +75,7 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.write("Hello, <b>" + self.get_current_user() + "</b> <br> <a href=/auth/logout>Logout</a>")
-
+        self.redirect("/home")
 
 class AuthLoginHandler(BaseHandler):
     def get(self):
