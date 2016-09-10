@@ -2,6 +2,7 @@
 
 from tornado.options import define, options
 from datetime import datetime
+from datetime import timedelta
 import logging
 import psycopg2
 import os.path
@@ -118,12 +119,11 @@ class HomeHandler(BaseHandler):
         c_user = self.get_current_user()
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("select * from users where mail = '%s'" % c_user)
+        cur.execute("select * from users where mail = '%s';" % c_user)
         rows = cur.fetchall()
         my_data = rows[0]       ##### (1)
-        cur.execute("select * from messages where reader_id = '%s'" % c_user)
+        cur.execute("select * from messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s';" % c_user)
         msg_data = cur.fetchall()       ##### (2)
-
         self.render("home.html",
                     u_data = my_data,
                     messages = msg_data
@@ -146,11 +146,12 @@ class FormHandler(BaseHandler):
                     )
 
     def post(self):
+        d = datetime.now()
         m_writer = self.get_current_user()
         m_reader = self.get_argument("reader")
         m_title = self.get_argument("title")
         m_text = self.get_argument("text")
-        m_date = str(datetime.now())
+        m_date = str(d + timedelta(hours=9))
         logging.debug("\n" + m_writer + "\n" + m_reader + "\n" + m_title + "\n" + m_text + "\n" + m_date)
         
         conn = self.application.conn
