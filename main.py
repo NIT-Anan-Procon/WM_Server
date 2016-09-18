@@ -31,7 +31,7 @@ class Application(tornado.web.Application):
             (r'/auth/login', AuthLoginHandler),
             (r'/auth/logout', AuthLogoutHandler),
             (r'/auth/signup', SignUpHandler),
-            (r'/home',HomeHandler),
+            (r'/home/([1-9]+)',HomeHandler),
             (r'/form',FormHandler),
 
         ]
@@ -76,7 +76,7 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.redirect("/home")
+        self.redirect("/home/1")
 
 class AuthLoginHandler(BaseHandler):
     def get(self):
@@ -98,7 +98,7 @@ class AuthLoginHandler(BaseHandler):
         if rows[0] != None:
           if password == rows[0][1]:
             self.set_current_user(username)
-            self.redirect("/home")
+            self.redirect("/home/1")
         else:
             self.write_error(403)
 
@@ -107,7 +107,7 @@ class AuthLogoutHandler(BaseHandler):
 
     def get(self):
         self.clear_current_user()
-        self.redirect('/home')
+        self.redirect('/home/1')
 
 
 
@@ -115,18 +115,25 @@ class AuthLogoutHandler(BaseHandler):
 
 class HomeHandler(BaseHandler):
     @tornado.web.authenticated
-    def get(self):
+    def get(self,page_number):
         c_user = self.get_current_user()
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s';" % c_user)
         rows = cur.fetchall()
         my_data = rows[0]       ##### (1)
-        cur.execute("select * from messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s';" % c_user)
+	n = 6
+	x = (int(page_number)-1) * n
+        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
         msg_data = cur.fetchall()       ##### (2)
+	cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
+        page_amount = len(cur.fetchall()) / n + 1
+	print(page_amount)
         self.render("home.html",
                     u_data = my_data,
-                    messages = msg_data
+                    messages = msg_data,
+		    page_amount = page_amount,
+		    current_page = int(page_number)
                     )
 
 class FormHandler(BaseHandler):
@@ -181,7 +188,7 @@ class SignUpHandler(BaseHandler):
         cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos))
         conn.commit()
         logging.debug("INSERT END!!")
-        self.redirect('/home')
+        self.redirect('/home/1')
 
 
 #######################################################################

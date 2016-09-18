@@ -7,7 +7,9 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
     <!-- Bootstrap -->
-    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ static_url("css/bootstrap.min.css") }}" rel="stylesheet">
+    <link href="{{ static_url("css/style.css") }}" rel="stylesheet">
+
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -40,9 +42,22 @@
             </div>
         {% end %}
     </div>
-
+    <hr> 
+    <div align="center">
+    {% if page_amount > 1 %}
+    	<ul class="pagination">
+		{% for i in range(1,page_amount+1)%}
+			{% if i == current_page %}
+				<li class="active"><a href="{{i}}">{{i}}</a></li>
+			{% else %}
+				<li><a href="{{i}}">{{i}}</a></li>
+			{% end %}
+		{% end %}
+    	</ul>
+    {% end %}
+    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
-    <script src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{{ static_url("js/jquery-3.1.0.min.js")}}"></script>
+    <script src="{{ static_url("js/bootstrap.min.js")}}"></script>
   </body>
 </html>
