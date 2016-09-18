@@ -124,7 +124,7 @@ class HomeHandler(BaseHandler):
         my_data = rows[0]       ##### (1)
 	n = 6
 	x = (int(page_number)-1) * n
-        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY wright_at DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
         msg_data = cur.fetchall()       ##### (2)
 	cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
         page_amount = len(cur.fetchall()) / n + 1
