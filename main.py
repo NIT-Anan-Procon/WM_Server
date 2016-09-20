@@ -32,6 +32,7 @@ class Application(tornado.web.Application):
             (r'/auth/logout', AuthLogoutHandler),
             (r'/auth/signup', SignUpHandler),
             (r'/home/([1-9]+)',HomeHandler),
+            (r'/home',MainHandler),
             (r'/form',FormHandler),
 
         ]
@@ -126,14 +127,16 @@ class HomeHandler(BaseHandler):
 	x = (int(page_number)-1) * n
         cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY wright_at DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
         msg_data = cur.fetchall()       ##### (2)
-	cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
+        cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
         page_amount = len(cur.fetchall()) / n + 1
-	print(page_amount)
+        pic_src = "image/manager/" + str(my_data[5]) + ".png"
+        print(pic_src)
         self.render("home.html",
                     u_data = my_data,
                     messages = msg_data,
-		    page_amount = page_amount,
-		    current_page = int(page_number)
+		                page_amount = page_amount,
+		                current_page = int(page_number),
+                    pic_src = pic_src
                     )
 
 class FormHandler(BaseHandler):
@@ -181,11 +184,12 @@ class SignUpHandler(BaseHandler):
         u_password = self.get_argument("password")
         u_school = self.get_argument("school")
         u_pos = self.get_argument("pos")
+        u_manager = 0;
 
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """insert into users values('%s','%s','%s','%s','%s');"""
-        cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos))
+        sql = """insert into users values('%s','%s','%s','%s','%s','%s');"""
+        cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager))
         conn.commit()
         logging.debug("INSERT END!!")
         self.redirect('/home/1')

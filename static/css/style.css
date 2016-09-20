@@ -9,6 +9,26 @@
 /* main */
 
 #main {
-
 }
-body { padding-top: 70px; }
+body { 
+  padding-top: 100px; 
+  margin: 20px;
+}
+#hukidashi{
+  position: absolute; 
+  top: 15px; 
+  left: 0px; 
+  width: 300px;
+}
+#hukidashi_msg{
+  position: absolute; 
+  top: 60px; 
+  left: 20px; 
+  width: 280px;
+}
+#manager{
+  position: absolute; 
+  top: 15px; 
+  left: 300px; 
+  width: 250px;
+}
