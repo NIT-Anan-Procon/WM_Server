@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8">
 	  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
@@ -27,20 +26,20 @@
         <h1>{{u_data[2]}}のHome</h1>
         <h3>{{u_data[2]}}さんに対するメッセージ</h3>
         <hr>
-        <div class="col-md-6" id="character" >
+        <div class="col-md-6" id="manager-area" >
             <p style="position: relative;">
-                <img id="hukidashi" src="{{ static_url("image/hukidashi.jpg") }}"/>
                 <img id="manager" src="{{ static_url(pic_src)}}"/>
+                <img id="hukidashi" src="{{ static_url("image/hukidashi.gif") }}"/>
                 <span id="hukidashi_msg">
-                      看板の内側に表示する文章です。
-                      <a href="http://translate.weblio.jp/">http://translate.weblio.jp/</a>
+                      ここはアドバイスを表示する予定です♪
+                      <a href="https://github.com/NIT-Anan-Procon/WM_Server">https://github.com/NIT-Anan-Procon/WM_Server</a>
                 </span>
             </p>
         </div>
         <div class="col-md-6">
             {% for m in messages %}
                 <h4><font size="3">From:</font> {{m[7]}}（{{m[0]}}）</h4>
-                <div class="alert alert-info">
+                <div class="alert alert-info msg-text">
                     <font size="3">Title: 
                         <font size="5" color="#000000">{{m[2]}}</font>
                         <br>Text: <br>
