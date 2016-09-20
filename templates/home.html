@@ -27,7 +27,7 @@
         <h1>{{u_data[2]}}のHome</h1>
         <h3>{{u_data[2]}}さんに対するメッセージ</h3>
         <hr>
-        <div class="col-xs-6" id="character" >
+        <div class="container-fluid" id="character" >
             <p style="position: relative;">
                 <img id="hukidashi" src="{{ static_url("image/hukidashi.jpg") }}"/>
                 <img id="manager" src="{{ static_url(pic_src)}}"/>
@@ -37,7 +37,7 @@
                 </span>
             </p>
         </div>
-        <div class="col-xs-6">
+        <div class="container-fluid">
           {% for m in messages %}
                 <h4><font size="3">From:</font> {{m[7]}}（{{m[0]}}）</h4>
                 <div class="alert alert-info" role="alert">
