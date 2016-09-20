@@ -24,7 +24,7 @@
       {% include "header.html" %}
       <div class="row">
         <h1>{{u_data[2]}}のHome</h1>
-        <h3>{{u_data[2]}}さんに対するメッセージ</h3>
+        <h4>{{u_data[2]}}さんに対するメッセージ</h4>
         <hr>
         <div class="col-md-6" id="manager-area" >
             <p style="position: relative;">
@@ -36,6 +36,7 @@
                 </span>
             </p>
         </div>
+        <hr>
         <div class="col-md-6">
             {% for m in messages %}
                 <h4><font size="3">From:</font> {{m[7]}}（{{m[0]}}）</h4>
