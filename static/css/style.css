@@ -15,14 +15,14 @@ body {
   margin: 20px;
 }
 #character{
-  height: 500px;
-  width: 300px;
+  height: 400px;
+  width: 250px;
 }
 #hukidashi{
   position: absolute; 
-  top: 15px; 
+  top: 10px; 
   left: 0px; 
-  width: 180px;
+  width: 150px;
 }
 #hukidashi_msg{
   position: absolute; 
