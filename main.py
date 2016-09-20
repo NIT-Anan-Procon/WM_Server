@@ -14,7 +14,7 @@ import tornado.web
 import urlparse
 import psycopg2
 import psycopg2.extras
-
+import random 
 
 
 define("port", default=5000, type=int)
@@ -184,7 +184,7 @@ class SignUpHandler(BaseHandler):
         u_password = self.get_argument("password")
         u_school = self.get_argument("school")
         u_pos = self.get_argument("pos")
-        u_manager = 0;
+        u_manager = random.randint(0,5)
 
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
