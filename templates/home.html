@@ -19,10 +19,9 @@
     <![endif]-->
     <title>home</title>
   </head>
-  
+  {% autoescape None %}
+  {% include "header.html" %}
   <body>
-    {% autoescape None %}
-    {% include "header.html" %}
     <div class="container-fluid">
       <div class="row">
         <h1>{{u_data[2]}}のHome</h1>
