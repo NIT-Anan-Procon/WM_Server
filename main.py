@@ -34,7 +34,7 @@ class Application(tornado.web.Application):
             (r'/home/([1-9]+)',HomeHandler),
             (r'/home',MainHandler),
             (r'/form',FormHandler),
-
+            (r'/review',ReviewHandler),
         ]
         settings = dict(
             cookie_secret='gaofjawpoer940r34823842398429afadfi4iias',
@@ -125,7 +125,7 @@ class HomeHandler(BaseHandler):
         my_data = rows[0]       ##### (1)
 	n = 6
 	x = (int(page_number)-1) * n
-        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY wright_at DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
         msg_data = cur.fetchall()       ##### (2)
         cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
         page_amount = len(cur.fetchall()) / n + 1
@@ -171,6 +171,51 @@ class FormHandler(BaseHandler):
         conn.commit()
         logging.debug("INSERT END!!")
         self.redirect('/form')
+
+
+class ReviewHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        c_user = self.get_current_user()
+        conn = self.application.conn 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from users where mail = '%s'" % c_user)
+        rows = cur.fetchall()
+        school = rows[0][3]
+        cur.execute("select * from users where school = '%s'" % school)
+        members = cur.fetchall()
+        cur.execute("select names from  status where school = '%s'" % school)
+        param_names = cur.fetchall()[0][0].split(",")
+        self.render("review.html",
+                    users_name = members,
+                    param_names = param_names
+                    )
+
+    def post(self):
+        d = datetime.now()
+        r_writer = self.get_current_user()
+        r_reader = self.get_argument("reader")
+        r_title = self.get_argument("title")
+        r_good = self.get_argument("good")
+        r_advice = self.get_argument("advice")
+        r_date = str(d + timedelta(hours=9))
+        param_len = int(self.get_argument("param_len"))
+        r_parameter = ""
+        for i in range(0,param_len):
+          arg = "param_" + str(i)
+          r_parameter = r_parameter + self.get_argument(arg) + ","
+
+        logging.debug("\n" + r_writer + "\n" + r_reader + "\n" + r_title + "\n" + r_good + "\n" + r_advice + "\n" + r_parameter + "\n" + r_date)
+        
+        conn = self.application.conn
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        sql = """insert into reviews values('%s','%s','%s','%s','%s','%s','%s');"""
+        cur.execute(sql % (r_writer, r_reader, r_title, r_good, r_advice, r_parameter, r_date))
+        conn.commit()
+        logging.debug("INSERT END!!")
+        self.redirect('/review')
+
+
 
 
 class SignUpHandler(BaseHandler):
