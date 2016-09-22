@@ -293,7 +293,7 @@ class SignUpHandler(BaseHandler):
         conn.commit()
 
         logging.debug("INSERT END!!")
-        self.redirect('/home/1')
+        self.redirect('/auth/login')
 
 
 #######################################################################
