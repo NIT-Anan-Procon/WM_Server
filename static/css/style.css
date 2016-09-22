@@ -46,3 +46,10 @@ body {
 .msg-text{
   word-wrap: break-word;
 }
+.table td {
+    text-align: center;
+}
+.table th {
+    text-align: center;
+}
+

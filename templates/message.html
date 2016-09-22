@@ -18,12 +18,46 @@
     </head>
     <body>
 		{% include "header.html" %}
-        <script src="static/js/bootstrap.min.js"></script>
-    	<script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
+      <script src="{{static_url("js/bootstrap.min.js")}}"></script>
+    	<script type="text/javascript" src="{{static_url("js/jquery-3.1.0.min.js")}}"></script>
+
+        <div class="container-fluid">
+            <h4>{{u_data[2]}}さんに対するメッセージ</h4>
+            {% for m in messages %}
+                <h4><font size="3">From:</font>
+                <font size="5" color="#6666ff">{{m[7]}}</font>（{{m[0]}}）</h4>
+                <div class="alert alert-info msg-text">
+                    <font size="3">Title: 
+                        <font size="5" color="#000000">{{m[2]}}</font>
+                        <br>
+                        Text: <br>
+                        <font size="4" color="#000000">
+                            {{m[3]}}
+                        </font><br>
+                    </font>
+                    <div align="right">
+                        <font size="2" color="#888888">{{m[4][:-10]}}</font>
+                    </div>
+                </div>
+            {% end %}
+
+            <div>
+                {% if page_amount > 1 %}
+                    <ul class="pagination">
+                        {% for i in range(1,page_amount+1)%}
+                            {% if i == current_page %}
+                                <li class="active"><a href="{{i}}">{{i}}</a></li>
+                            {% else %}
+                                <li><a href="{{i}}">{{i}}</a></li>
+                            {% end %}
+                        {% end %}
+                    </ul>
+                {% end %}
+            </div>
+        </div>
 
         <div class="container-fluid">
             <h1>Message Form</h1>
-            <div class="col-md-8">
             <form class="form-horizontal" action="/form" method="post">
                 <div class="form-group">
                     {% module xsrf_form_html() %}
@@ -40,10 +74,9 @@
                     <p><input type="submit" value="Send!" class="btn btn-primary"></p>
                 </div>
             </form>
-            </div>
         </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    	<script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
-        <script src="static/js/bootstrap.min.js"></script>
+    	<script type="text/javascript" src="{{static_url("js/jquery-3.1.0.min.js")}}"></script>
+        <script src="{{static_url("js/bootstrap.min.js")}}"></script>
     </body>
 </html>

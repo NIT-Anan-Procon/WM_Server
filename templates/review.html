@@ -14,7 +14,7 @@
       	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     	<![endif]-->
-    	<title>Message Form</title>
+    	<title>Review Form</title>
     </head>
     <body>
 		{% include "header.html" %}
@@ -22,7 +22,7 @@
     	<script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
 
         <div class="container-fluid">
-            <h1>Message Form</h1>
+            <h1>Review Form</h1>
             <div class="col-md-12">
             <form class="form-horizontal" action="/review" method="post">
                 <div class="form-group">
@@ -34,17 +34,21 @@
                         {% end %}
                     </select>
                     </p>
-                    <p>タイトル：<input type="text" name="title" size="40" class="form-control"></p>
+                    <p>タイトル：<input type="text" name="title" size="40" class="form-control" placeholder="例）大会名"></p>
                     <input type="hidden" name="param_len" value="{{len(param_names)}}">
-                    {% for i in range(0,len(param_names)) %}
-                      {{param_names[i]}}
-                      <select name="{{'param_'+str(i)}}" class="form-control">
-                          {% for j in range(0,6) %}
-                            <option value={{param_names[i]+':'+str(j)}}>{{str(j)}}</option>
-                          {% end %}
-                      </select>
-                    {% end %}
-                    <p>Good!!：<br>
+                    <div class="row">
+                        {% for i in range(0,len(param_names)) %}
+                          <div class="col-xs-4">
+                            <font size="1" color="#000000">{{param_names[i]}}</font>
+                            <select name="{{'param_'+str(i)}}" class="form-control">
+                              {% for j in range(0,6) %}
+                                <option value={{param_names[i]+':'+str(j)}}>{{str(j)}}</option>
+                              {% end %}
+                            </select>
+                          </div>
+                        {% end %}
+                    </div>
+                    <p>良かったポイント：<br>
                         <textarea name="good" rows="10" cols="40" class="form-control"></textarea>
                     </p>
                     <p>練習リクエスト：<br>

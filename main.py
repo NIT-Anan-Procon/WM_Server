@@ -33,6 +33,7 @@ class Application(tornado.web.Application):
             (r'/auth/signup', SignUpHandler),
             (r'/home/([1-9]+)',HomeHandler),
             (r'/home',MainHandler),
+            (r'/message/([1-9]+)',MessageHandler),
             (r'/form',FormHandler),
             (r'/review',ReviewHandler),
         ]
@@ -77,7 +78,7 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.redirect("/home/1")
+        self.redirect("/auth/login")
 
 class AuthLoginHandler(BaseHandler):
     def get(self):
@@ -123,38 +124,53 @@ class HomeHandler(BaseHandler):
         cur.execute("select * from users where mail = '%s';" % c_user)
         rows = cur.fetchall()
         my_data = rows[0]       ##### (1)
-	n = 6
-	x = (int(page_number)-1) * n
-        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
-        msg_data = cur.fetchall()       ##### (2)
-        cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
+        print(my_data[5])
+        n = 6
+        x = (int(page_number)-1) * n
+        cur.execute("SELECT * FROM reviews RIGHT JOIN users ON reviews.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+        review_data = cur.fetchall()       ##### (2)
+        cur.execute("SELECT * FROM reviews where reader_id = '%s';" % c_user)
         page_amount = len(cur.fetchall()) / n + 1
-        pic_src = "image/manager/" + str(my_data[5]) + ".png"
+        pic_src = "image/manager/" + str(my_data[6]) + ".png"
         print(pic_src)
         self.render("home.html",
                     u_data = my_data,
-                    messages = msg_data,
+                    reviews = review_data,
 		                page_amount = page_amount,
 		                current_page = int(page_number),
                     pic_src = pic_src
                     )
 
-class FormHandler(BaseHandler):
+class MessageHandler(BaseHandler):
     @tornado.web.authenticated
-    def get(self):
+    def get(self,page_number):
+        
         c_user = self.get_current_user()
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
         rows = cur.fetchall()
+        my_data = rows[0]       ##### (1)
         school = rows[0][3]
         cur.execute("select * from users where school = '%s'" % school)
         members = cur.fetchall()
-
-        self.render("form.html",
-                    users_name = members
+        
+        n = 6
+        x = (int(page_number)-1) * n
+        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+        msg_data = cur.fetchall()       ##### (2)
+        cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
+        page_amount = len(cur.fetchall()) / n + 1
+        self.render("message.html",
+                    users_name = members,
+                    messages = msg_data,
+                    page_amount = page_amount,
+                    current_page = int(page_number),
+                    u_data = my_data
                     )
 
+class FormHandler(BaseHandler):
+    @tornado.web.authenticated
     def post(self):
         d = datetime.now()
         m_writer = self.get_current_user()
@@ -163,14 +179,13 @@ class FormHandler(BaseHandler):
         m_text = self.get_argument("text")
         m_date = str(d + timedelta(hours=9))
         logging.debug("\n" + m_writer + "\n" + m_reader + "\n" + m_title + "\n" + m_text + "\n" + m_date)
-        
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         sql = """insert into messages values('%s','%s','%s','%s','%s');"""
         cur.execute(sql % (m_writer, m_reader, m_title, m_text, m_date))
         conn.commit()
         logging.debug("INSERT END!!")
-        self.redirect('/form')
+        self.redirect('/message/1')
 
 
 class ReviewHandler(BaseHandler):
@@ -184,7 +199,7 @@ class ReviewHandler(BaseHandler):
         school = rows[0][3]
         cur.execute("select * from users where school = '%s'" % school)
         members = cur.fetchall()
-        cur.execute("select names from  status where school = '%s'" % school)
+        cur.execute("select names from status where school = '%s'" % school)
         param_names = cur.fetchall()[0][0].split(",")
         self.render("review.html",
                     users_name = members,
@@ -193,17 +208,19 @@ class ReviewHandler(BaseHandler):
 
     def post(self):
         d = datetime.now()
-        r_writer = self.get_current_user()
-        r_reader = self.get_argument("reader")
-        r_title = self.get_argument("title")
-        r_good = self.get_argument("good")
-        r_advice = self.get_argument("advice")
-        r_date = str(d + timedelta(hours=9))
+        r_writer = self.get_current_user().encode('utf-8')
+        r_reader = self.get_argument("reader").encode('utf-8')
+        r_title = self.get_argument("title").encode('utf-8')
+        r_good = self.get_argument("good").encode('utf-8')
+        r_advice = self.get_argument("advice").encode('utf-8')
+        r_date = str(d + timedelta(hours=9)).encode('utf-8')
         param_len = int(self.get_argument("param_len"))
         r_parameter = ""
         for i in range(0,param_len):
           arg = "param_" + str(i)
           r_parameter = r_parameter + self.get_argument(arg) + ","
+        r_parameter = r_parameter[:-1].encode('utf-8')
+        print(type(r_parameter))
 
         logging.debug("\n" + r_writer + "\n" + r_reader + "\n" + r_title + "\n" + r_good + "\n" + r_advice + "\n" + r_parameter + "\n" + r_date)
         
@@ -213,8 +230,46 @@ class ReviewHandler(BaseHandler):
         cur.execute(sql % (r_writer, r_reader, r_title, r_good, r_advice, r_parameter, r_date))
         conn.commit()
         logging.debug("INSERT END!!")
-        self.redirect('/review')
+        cur.execute("select * from users where mail = '%s'" % r_reader)
+        rows = cur.fetchall()
+        print(rows[0])
+        param = str(rows[0][5])
+        count = int(rows[0][7])
+        if count == None:
+          count = 0
+        print("カウント=> " + str(count))
+        print("現在の=> " + param)
+        param_text = ""
+        if param != '':
+          new_dict = {}   #new parameter dict
+          for rp in r_parameter.split(","):
+            rpsub = rp.split(":")
+            new_dict[rpsub[0]] = rpsub[1]
+          param_dict = {}   #old parameter dict
+          for pr in param.split(","):
+            sub = pr.split(":")
+            param_dict[sub[0]] = sub[1]
+          for d in new_dict.keys():
+            if d in param_dict:
+              param_dict[d] = str(int(new_dict[d]))
+            else:
+              param_dict[d] = new_dict[d]
+          for key in param_dict.keys():
+            param_text = param_text + key + ":" + param_dict[key] + ","
+          param_text = param_text[:-1]
+        else:
+          param_text = r_parameter
+        print("変更後=> " + param_text)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        sql = """UPDATE users SET parameter ='%s' WHERE mail='%s';"""
+        cur.execute(sql % (param_text, r_reader))
+        conn.commit()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        sql = """UPDATE users SET count ='%s' WHERE mail='%s';"""
+        cur.execute(sql % (count+1, r_reader))
+        conn.commit()
 
+        self.redirect('/review')
 
 
 
@@ -233,9 +288,10 @@ class SignUpHandler(BaseHandler):
 
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """insert into users values('%s','%s','%s','%s','%s','%s');"""
+        sql = """insert into users values('%s','%s','%s','%s','%s','','%s',0);"""
         cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager))
         conn.commit()
+
         logging.debug("INSERT END!!")
         self.redirect('/home/1')
 
