@@ -14,42 +14,37 @@
       	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     	<![endif]-->
-    	<title>Message Form</title>
+    	<title>Practice Form</title>
     </head>
     <body>
     {% autoescape None %}
 		{% include "header.html" %}
       <script src="{{static_url("js/bootstrap.min.js")}}"></script>
     	<script type="text/javascript" src="{{static_url("js/jquery-3.1.0.min.js")}}"></script>
-      {% if admin %}
-        <h2>部内相互メッセージ一覧</h2>
-      {% else %}
-        <h2>{{u_data[2]}}さんに対するメッセージ</h2>
-      {% end %}
+
         <div class="container-fluid">
+            <h4>練習報告</h4>
+            {% if messages != None %}
             {% for m in messages %}
-                <div class="alert alert-danger msg-text">
-                    <h4><font size="3">From:</font>
-                    <font size="5" color="#6666ff">{{m[5]}}</font>（{{m[0]}}）</h4>
-                    {% if admin %}
-                        <h4><font size="3">To:</font>
-                        <font size="5" color="#6666ff">{{m[6]}}</font>（{{m[1]}}）</h4>
-                    {% end %}
+                <div class="alert alert-warning msg-text">
+                    <h4><font size="3">Player:</font>
+                    <font size="5" color="#6666ff">{{m[6]}}</font>（{{m[0]}}）</h4>
                     <hr>
-                    <font size="3">Title: 
-                        <font size="5" color="#000000">{{m[2]}}</font>
+                    <font size="3">
+                        練習メニュー: 
+                        <font size="5" color="#000000">{{m[1]}}</font>
                         <hr>
-                        Text: <br>
+                        詳細: <br>
                         <font size="4" color="#000000">
-                            {{m[3]}}
+                            {{m[2]}}
                         </font><br>
                     </font>
                     <div align="right">
-                        <font size="2" color="#888888">{{m[4][:-10]}}</font>
+                        <font size="2" color="#888888">{{m[3][:-10]}}</font>
                     </div>
                 </div>
             {% end %}
-
+            {% end %}
             <div>
                 {% if page_amount > 1 %}
                     <ul class="pagination">
@@ -66,17 +61,12 @@
         </div>
 
         <div class="container-fluid">
-            <h1>Message Form</h1>
-            <form class="form-horizontal" action="/form" method="post">
+            <h1>練習記録</h1>
+            <form class="form-horizontal" action="/pracform" method="post">
                 <div class="form-group">
                     {% module xsrf_form_html() %}
-                    <p>To：<select name="reader" class="form-control">
-                        {% for d in users_name %}
-                            <option value={{d[0]}}>{{d[2]+" | "+d[0]}}</option>
-                        {% end %}
-                    </select></p>
-                    <p>タイトル：<input type="text" name="title" size="40" class="form-control"></p>
-                    <p>コメント：<br>
+                    <p>練習メニュー：<input type="text" name="title" size="40" class="form-control"></p>
+                    <p>詳細：<br>
                         <textarea name="text" rows="10" cols="40" class="form-control"></textarea>
                     ※コメントにはHTMLタグが使えます。
                     </p>

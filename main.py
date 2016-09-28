@@ -34,7 +34,9 @@ class Application(tornado.web.Application):
             (r'/home/([1-9]+)',HomeHandler),
             (r'/home',MainHandler),
             (r'/message/([1-9]+)',MessageHandler),
+            (r'/practice/([1-9]+)',PracticeHandler),
             (r'/form',FormHandler),
+            (r'/pracform',PracFormHandler),
             (r'/review',ReviewHandler),
         ]
         settings = dict(
@@ -118,33 +120,76 @@ class AuthLogoutHandler(BaseHandler):
 class HomeHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self,page_number):
+        admin = False
         c_user = self.get_current_user()
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s';" % c_user)
         rows = cur.fetchall()
         my_data = rows[0]       ##### (1)
-        print(my_data[5])
+        school = my_data[3]
+        if my_data[4] == "admin":
+          admin = True
+        logging.debug(my_data[4])
         n = 6
         x = (int(page_number)-1) * n
-        cur.execute("SELECT * FROM reviews RIGHT JOIN users ON reviews.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
-        review_data = cur.fetchall()       ##### (2)
-        cur.execute("SELECT * FROM reviews where reader_id = '%s';" % c_user)
-        page_amount = len(cur.fetchall()) / n + 1
+        if admin:
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.good,A1.advice,A1.parameter,A1.date,A1.name,users.name,users.school FROM (SELECT reviews.writer_id,reviews.reader_id,reviews.title,reviews.good,reviews.advice,reviews.parameter,reviews.date,users.name FROM reviews INNER JOIN users ON reviews.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where users.school = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (school, n, x))
+          review_data = cur.fetchall()       ##### (2)
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.good,A1.advice,A1.parameter,A1.date,A1.name,users.name,users.school FROM (SELECT reviews.writer_id,reviews.reader_id,reviews.title,reviews.good,reviews.advice,reviews.parameter,reviews.date,users.name FROM reviews INNER JOIN users ON reviews.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where users.school = '%s';" % school)
+          page_amount = len(cur.fetchall()) / n + 1
+        else:
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.good,A1.advice,A1.parameter,A1.date,A1.name,users.name,users.school FROM (SELECT reviews.writer_id,reviews.reader_id,reviews.title,reviews.good,reviews.advice,reviews.parameter,reviews.date,users.name FROM reviews INNER JOIN users ON reviews.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where A1.reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+          review_data = cur.fetchall()       ##### (2)
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.good,A1.advice,A1.parameter,A1.date,A1.name,users.name,users.school FROM (SELECT reviews.writer_id,reviews.reader_id,reviews.title,reviews.good,reviews.advice,reviews.parameter,reviews.date,users.name FROM reviews INNER JOIN users ON reviews.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where A1.reader_id = '%s';" % c_user)
+          page_amount = len(cur.fetchall()) / n + 1
+
         pic_src = "image/manager/" + str(my_data[6]) + ".png"
-        print(pic_src)
+        param_result = ""
+        if not admin:
+          cur.execute("SELECT parameter FROM reviews where reader_id = '%s' ORDER BY date DESC LIMIT 30;"%c_user)
+          param_data = cur.fetchall()
+          if param_data:
+            param_dict = {}
+            for pd in param_data:
+              tmp1 = pd[0].split(",")
+              for t1 in tmp1:
+                tmp2 = t1.split(":")
+                if tmp2[0] in param_dict:
+                  param_dict[tmp2[0]][0] = param_dict[tmp2[0]][0] + int(tmp2[1])
+                  param_dict[tmp2[0]][1] = param_dict[tmp2[0]][1] + 1
+                else:
+                  param_dict[tmp2[0]] = [int(tmp2[1]),1]
+            cur.execute("SELECT names FROM status WHERE school = '%s';"%school)
+            param_names = cur.fetchall()[0][0].split(",")
+            param_result = ""
+            for pn in param_names:
+              num = round(float(param_dict[pn][0]) / param_dict[pn][1],1)
+              param_result = param_result + pn + ":" + str(num) + ","
+            param_result = param_result[:-1]
+            logging.debug(param_result)
+
+        cur.execute("SELECT A1.advice FROM (SELECT * FROM reviews INNER JOIN users ON reviews.writer_id = users.mail WHERE reviews.reader_id = '%s')AS A1 WHERE A1.lank = 'admin' ORDER BY A1.date;"%c_user)
+        rows = cur.fetchall()
+        manager_advice = "頑張れ！！"
+        if rows:
+          if rows[0]:
+            manager_advice = rows[0][0]
+        logging.debug(manager_advice)
         self.render("home.html",
                     u_data = my_data,
                     reviews = review_data,
 		                page_amount = page_amount,
 		                current_page = int(page_number),
-                    pic_src = pic_src
+                    pic_src = pic_src,
+                    admin = admin,
+                    param = param_result,
+                    advice = manager_advice
                     )
 
 class MessageHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self,page_number):
-        
         c_user = self.get_current_user()
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -154,19 +199,33 @@ class MessageHandler(BaseHandler):
         school = rows[0][3]
         cur.execute("select * from users where school = '%s'" % school)
         members = cur.fetchall()
-        
+        admin = False
+        if my_data[4] == "admin":
+          admin = True
         n = 6
         x = (int(page_number)-1) * n
-        cur.execute("SELECT * FROM messages RIGHT JOIN users ON messages.writer_id = users.mail where reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
-        msg_data = cur.fetchall()       ##### (2)
-        cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
-        page_amount = len(cur.fetchall()) / n + 1
+        if admin:
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.text,A1.date,A1.name,users.name,users.school FROM (SELECT messages.writer_id,messages.reader_id,messages.title,messages.text,messages.date,users.name FROM messages INNER JOIN users ON messages.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where users.school = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (school, n, x))
+          rows = cur.fetchall()
+          msg_data = []
+          for r in rows:
+            if r[0] != None:
+              msg_data.append(r)
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.text,A1.date,A1.name,users.name,users.school FROM (SELECT messages.writer_id,messages.reader_id,messages.title,messages.text,messages.date,users.name FROM messages INNER JOIN users ON messages.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where users.school = '%s';" % school)
+          page_amount = len(cur.fetchall()) / n + 1
+        else:
+          cur.execute("SELECT A1.writer_id,A1.reader_id,A1.title,A1.text,A1.date,A1.name,users.name,users.school FROM (SELECT messages.writer_id,messages.reader_id,messages.title,messages.text,messages.date,users.name FROM messages INNER JOIN users ON messages.writer_id = users.mail)AS A1 INNER JOIN users ON A1.reader_id = users.mail where A1.reader_id = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (c_user, n, x))
+          msg_data = cur.fetchall()
+          cur.execute("SELECT * FROM messages where reader_id = '%s';" % c_user)
+          page_amount = len(cur.fetchall()) / n + 1
+
         self.render("message.html",
                     users_name = members,
                     messages = msg_data,
                     page_amount = page_amount,
                     current_page = int(page_number),
-                    u_data = my_data
+                    u_data = my_data,
+                    admin = admin
                     )
 
 class FormHandler(BaseHandler):
@@ -186,6 +245,60 @@ class FormHandler(BaseHandler):
         conn.commit()
         logging.debug("INSERT END!!")
         self.redirect('/message/1')
+
+
+class PracticeHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self,page_number):
+        c_user = self.get_current_user()
+        conn = self.application.conn 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from users where mail = '%s'" % c_user)
+        rows = cur.fetchall()
+        my_data = rows[0]       ##### (1)
+        school = rows[0][3]
+        n = 6
+        x = (int(page_number)-1) * n
+        cur.execute("SELECT * FROM practices INNER JOIN users ON practices.writer_id = users.mail where users.school = '%s' ORDER BY date DESC LIMIT %s OFFSET %s;" % (school, n, x))
+        rows = cur.fetchall()
+        prac_data = []
+        for r in rows:
+          if r[0] != None:
+            prac_data.append(r)
+        cur.execute("SELECT * FROM practices RIGHT JOIN users ON practices.writer_id = users.mail where users.school = '%s';" % school)
+        page_amount = len(cur.fetchall()) / n + 1
+        self.render("practice.html",
+                    messages = prac_data,
+                    page_amount = page_amount,
+                    current_page = int(page_number),
+                    u_data = my_data
+                    )
+
+
+class PracFormHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        c_user = self.get_current_user()
+        conn = self.application.conn 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from users where mail = '%s'" % c_user)
+        rows = cur.fetchall()
+        my_data = rows[0]       ##### (1)
+        school = rows[0][3]
+        d = datetime.now()
+        m_writer = c_user
+        m_title = self.get_argument("title")
+        m_text = self.get_argument("text")
+        m_date = str(d + timedelta(hours=9))
+        logging.debug("\n" + m_writer + "\n" + m_title + "\n" + m_text + "\n" + m_date)
+        conn = self.application.conn
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        sql = """insert into practices values('%s','%s','%s','%s');"""
+        cur.execute(sql % (m_writer, m_title, m_text, m_date))
+        conn.commit()
+        logging.debug("INSERT END!!")
+        self.redirect('/practice/1')
+
 
 
 class ReviewHandler(BaseHandler):
@@ -230,45 +343,6 @@ class ReviewHandler(BaseHandler):
         cur.execute(sql % (r_writer, r_reader, r_title, r_good, r_advice, r_parameter, r_date))
         conn.commit()
         logging.debug("INSERT END!!")
-        cur.execute("select * from users where mail = '%s'" % r_reader)
-        rows = cur.fetchall()
-        print(rows[0])
-        param = str(rows[0][5])
-        count = int(rows[0][7])
-        if count == None:
-          count = 0
-        print("カウント=> " + str(count))
-        print("現在の=> " + param)
-        param_text = ""
-        if param != '':
-          new_dict = {}   #new parameter dict
-          for rp in r_parameter.split(","):
-            rpsub = rp.split(":")
-            new_dict[rpsub[0]] = rpsub[1]
-          param_dict = {}   #old parameter dict
-          for pr in param.split(","):
-            sub = pr.split(":")
-            param_dict[sub[0]] = sub[1]
-          for d in new_dict.keys():
-            if d in param_dict:
-              param_dict[d] = str(int(new_dict[d]))
-            else:
-              param_dict[d] = new_dict[d]
-          for key in param_dict.keys():
-            param_text = param_text + key + ":" + param_dict[key] + ","
-          param_text = param_text[:-1]
-        else:
-          param_text = r_parameter
-        print("変更後=> " + param_text)
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """UPDATE users SET parameter ='%s' WHERE mail='%s';"""
-        cur.execute(sql % (param_text, r_reader))
-        conn.commit()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """UPDATE users SET count ='%s' WHERE mail='%s';"""
-        cur.execute(sql % (count+1, r_reader))
-        conn.commit()
-
         self.redirect('/review')
 
 

@@ -22,15 +22,15 @@
     <script type="text/javascript">
       window.onload = function() {
         var rc = new html5jp.graph.radar("chart");
-        var param_data = "{{u_data[5]}}".split(",");
+        var param_data = "{{param}}".split(",");
         var k_array = [];
         var v_array = [];
-        v_array.push("u_data[2]")
+        v_array.push("{{u_data[2]}}")
         var tmp;
         for(var i=0; i<param_data.length; i++){
           tmp = param_data[i].split(":");
           k_array.push(tmp[0]);
-          v_array.push(parseInt(tmp[1]));
+          v_array.push(parseFloat(tmp[1]));
         }
         if( ! rc ) { return; }
         var items = [
@@ -52,40 +52,52 @@
       <div class="row">
         <h1>{{u_data[2]}}のHome</h1>
         <hr>
-        <div class="col-md-4" id="manager-area" >
-            <p style="position: relative;">
-                <img id="manager" src="{{ static_url(pic_src)}}"/>
-                <img id="hukidashi" src="{{ static_url("image/hukidashi.gif") }}"/>
-                <span id="hukidashi_msg">
-                      ここはアドバイスを表示する予定です♪
-                      <a href="https://github.com/NIT-Anan-Procon/WM_Server">https://github.com/NIT-Anan-Procon/WM_Server</a>
-                </span>
-            </p>
+        {% if not admin %}
+            <div class="col-md-4" id="manager-area" >
+                <p style="position: relative;">
+                    <img id="manager" src="{{ static_url(pic_src)}}"/>
+                    <img id="hukidashi" src="{{ static_url("image/hukidashi.gif") }}"/>
+                    <span id="hukidashi_msg">
+                        <font size="2">{{advice}}</font>
+                    </span>
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h4>{{u_data[2]}}さんのパラメータ</h4>
+                <div><canvas width="400" height="300" id="chart"></canvas></div>
+            </div>
+            <div class="col-md-4">
+        {% end %}    
         </div>
         <div class="col-md-4">
-            <h4>{{u_data[2]}}さんのパラメータ</h4>
-            <div><canvas width="400" height="300" id="chart"></canvas></div>
-        </div>
-        <div class="col-md-4">
-            
-        </div>
-        <div class="col-md-4">
-            <h4>{{u_data[2]}}さんに対するレビューメッセージ</h4>
+            {% if not admin %}
+              <h3>{{u_data[2]}}さんへのレビューメッセージ</h3>
+            {% else %}
+              <h3>部内相互レビュー一覧</h3>
+            {% end %}
+            <hr>
             {% for r in reviews %}
-                <h4><font size="3">From:</font>
-                <font size="5" color="#6666ff">{{r[9]}}</font>（{{r[0]}}）</h4>
                 <div class="alert alert-info msg-text">
+                    <h4><font size="3">From:</font>
+                    <font size="5" color="#6666ff">{{r[7]}}</font>（{{r[0]}}）</h4>
+                    {% if admin %}
+                      <h4><font size="3">To:</font>
+                      <font size="5" color="#6666ff">{{r[8]}}</font>（{{r[1]}}）</h4>
+                    {% end %}
+                    <hr>
                     <font size="3">タイトル: 
                         <font size="5" color="#000000">{{r[2]}}</font>
-                        <br>
+                        <hr>
                         良かったポイント: <br>
                         <font size="4" color="#000000">
                             {{r[3]}}
-                        </font><br>
+                        </font>
+                        <hr>
                         練習リクエスト: <br>
                         <font size="4" color="#000000">
                             {{r[4]}}
-                        </font><br>
+                        </font>
+                        <hr>
                         評価: <br>
                         <font size="4" color="#000000">
                             <table border=1 class="table table-bordered">
