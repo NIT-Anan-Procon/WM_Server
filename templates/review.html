@@ -20,7 +20,7 @@
 		{% include "header.html" %}
         <script src="static/js/bootstrap.min.js"></script>
     	<script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
-
+        {% if users_name != [] %}
         <div class="container-fluid">
             <h1>Review Form</h1>
             <div class="col-md-12">
@@ -60,6 +60,10 @@
             </form>
             </div>
         </div>
+        {% else %}
+          チームメイトがいません。<br>
+          レビューが送れません。
+        {% end %}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     	<script type="text/javascript" src="static/js/jquery-3.1.0.min.js"></script>
         <script src="static/js/bootstrap.min.js"></script>

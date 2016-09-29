@@ -64,7 +64,8 @@
                 {% end %}
             </div>
         </div>
-
+        <hr>
+        {% if users_name != []%}
         <div class="container-fluid">
             <h1>Message Form</h1>
             <form class="form-horizontal" action="/form" method="post">
@@ -84,6 +85,10 @@
                 </div>
             </form>
         </div>
+        {% else %}
+        チームメイトがいません。<br>
+        メッセージを送れません。
+        {% end %}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     	<script type="text/javascript" src="{{static_url("js/jquery-3.1.0.min.js")}}"></script>
         <script src="{{static_url("js/bootstrap.min.js")}}"></script>

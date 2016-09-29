@@ -93,22 +93,22 @@ class AuthLoginHandler(BaseHandler):
 
         username = self.get_argument("username")  #emailアドレス
         password = self.get_argument("password")
-       
+  
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
         cur.execute("select * from users where mail = '%s'" % username)
         rows = cur.fetchall()
-
-        if rows[0] != None:
-          if password == rows[0][1]:
-            self.set_current_user(username)
-            self.redirect("/home/1")
-        else:
-            self.write_error(403)
+        try:
+          if rows[0] != None:
+            if password == rows[0][1]:
+              self.set_current_user(username)
+              self.redirect("/home/1")
+        except:
+            self.redirect('/auth/login')
 
 
 class AuthLogoutHandler(BaseHandler):
-
     def get(self):
         self.clear_current_user()
         self.redirect('/home/1')
@@ -126,7 +126,10 @@ class HomeHandler(BaseHandler):
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s';" % c_user)
         rows = cur.fetchall()
-        my_data = rows[0]       ##### (1)
+        try:
+          my_data = rows[0]       ##### (1)
+        except:
+          self.redirect('/auth/login')
         school = my_data[3]
         if my_data[4] == "admin":
           admin = True
@@ -191,13 +194,21 @@ class MessageHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self,page_number):
         c_user = self.get_current_user()
+        try:
+          if self.get_current_user():
+            logging.debug("Login now")
+        except:
+          self.redirect('/auth/login')
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
         rows = cur.fetchall()
-        my_data = rows[0]       ##### (1)
+        try:
+          my_data = rows[0]       ##### (1)
+        except:
+          self.redirect('/auth/login')
         school = rows[0][3]
-        cur.execute("select * from users where school = '%s'" % school)
+        cur.execute("select * from users where school = '%s' and not mail = '%s';" % (school,c_user))
         members = cur.fetchall()
         admin = False
         if my_data[4] == "admin":
@@ -251,6 +262,11 @@ class PracticeHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self,page_number):
         c_user = self.get_current_user()
+        try:
+          if c_user:
+            logging.debug("Login now")
+        except:
+          self.redirect('/auth/login')
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
@@ -267,11 +283,14 @@ class PracticeHandler(BaseHandler):
             prac_data.append(r)
         cur.execute("SELECT * FROM practices RIGHT JOIN users ON practices.writer_id = users.mail where users.school = '%s';" % school)
         page_amount = len(cur.fetchall()) / n + 1
+        cur.execute("SELECT names FROM status WHERE school = '%s';"%school)
+        param_names = cur.fetchall()[0][0].split(",")
         self.render("practice.html",
                     messages = prac_data,
                     page_amount = page_amount,
                     current_page = int(page_number),
-                    u_data = my_data
+                    u_data = my_data,
+                    param_names = param_names
                     )
 
 
@@ -279,6 +298,11 @@ class PracFormHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
         c_user = self.get_current_user()
+        try:
+          if c_user:
+            logging.debug("Login now")
+        except:
+          self.redirect('/auth/login')
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
@@ -305,12 +329,17 @@ class ReviewHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         c_user = self.get_current_user()
+        try:
+          if c_user:
+            logging.debug("Login now")
+        except:
+          self.redirect('/auth/login')
         conn = self.application.conn 
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("select * from users where mail = '%s'" % c_user)
         rows = cur.fetchall()
         school = rows[0][3]
-        cur.execute("select * from users where school = '%s'" % school)
+        cur.execute("select * from users where school = '%s' and not mail = '%s'" % (school,c_user))
         members = cur.fetchall()
         cur.execute("select names from status where school = '%s'" % school)
         param_names = cur.fetchall()[0][0].split(",")
@@ -320,6 +349,12 @@ class ReviewHandler(BaseHandler):
                     )
 
     def post(self):
+        c_user = self.get_current_user()
+        try:
+          if c_user:
+            logging.debug("Login now")
+        except:
+          self.redirect('/auth/login')
         d = datetime.now()
         r_writer = self.get_current_user().encode('utf-8')
         r_reader = self.get_argument("reader").encode('utf-8')
@@ -365,7 +400,14 @@ class SignUpHandler(BaseHandler):
         sql = """insert into users values('%s','%s','%s','%s','%s','','%s',0);"""
         cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager))
         conn.commit()
-
+        
+        cur.execute("select school from status where school = '%s';" % u_school)
+        rows = cur.fetchall()
+        logging.debug(rows)
+        param_names = u"シュート,アシスト,パスカット,ディフェンス,スタミナ"
+        if rows == []:
+          cur.execute("INSERT INTO status VALUES('%s','%s');" % (u_school,param_names))
+          conn.commit()
         logging.debug("INSERT END!!")
         self.redirect('/auth/login')
 

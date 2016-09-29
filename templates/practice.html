@@ -65,7 +65,13 @@
             <form class="form-horizontal" action="/pracform" method="post">
                 <div class="form-group">
                     {% module xsrf_form_html() %}
-                    <p>練習メニュー：<input type="text" name="title" size="40" class="form-control"></p>
+                    <p>練習メニュー：
+                        <select name="title" class="form-control">
+                        {% for pn in param_names %}
+                            <option value={{pn}}>{{pn}}</option>
+                        {% end %}
+                        </select>
+                    </p>
                     <p>詳細：<br>
                         <textarea name="text" rows="10" cols="40" class="form-control"></textarea>
                     ※コメントにはHTMLタグが使えます。
