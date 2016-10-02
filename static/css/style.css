@@ -26,21 +26,21 @@ body {
 #hukidashi{
   position: absolute; 
   top: 240px; 
-  left: 0px; 
+  left: 10px; 
   width: 280px;
   height: 100px;
 }
 #hukidashi_msg{
   position: absolute; 
   top: 250px; 
-  left: 10px; 
+  left: 20px; 
   width: 270px;
   word-wrap: break-word;
 }
 #manager{
   position: absolute; 
   top: 20px; 
-  left: 0px; 
+  left: 10px; 
   width: 280px;
 }
 .msg-text{

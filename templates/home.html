@@ -53,7 +53,9 @@
         <h1>{{u_data[2]}}のHome</h1>
         <hr>
         {% if not admin %}
-            <div class="col-md-4" id="manager-area" >
+            <div class="col-md-4">
+              <h4>あなたのマネージャー</h4>
+              <div id="manager-area" >
                 <p style="position: relative;">
                     <img id="manager" src="{{ static_url(pic_src)}}"/>
                     <img id="hukidashi" src="{{ static_url("image/hukidashi.gif") }}"/>
@@ -61,6 +63,7 @@
                         <font size="2">{{advice}}</font>
                     </span>
                 </p>
+              </div>
             </div>
             <div class="col-md-4">
                 <h4>{{u_data[2]}}さんのパラメータ</h4>

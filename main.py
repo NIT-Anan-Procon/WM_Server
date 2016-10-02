@@ -397,7 +397,7 @@ class SignUpHandler(BaseHandler):
 
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """insert into users values('%s','%s','%s','%s','%s','','%s',0);"""
+        sql = """insert into users values('%s','%s','%s','%s','%s','','%s');"""
         cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager))
         conn.commit()
         
