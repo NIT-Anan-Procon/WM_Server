@@ -38,6 +38,7 @@ class Application(tornado.web.Application):
             (r'/form',FormHandler),
             (r'/pracform',PracFormHandler),
             (r'/review',ReviewHandler),
+            (r'/members',MembersHandler),
         ]
         settings = dict(
             cookie_secret='gaofjawpoer940r34823842398429afadfi4iias',
@@ -189,6 +190,32 @@ class HomeHandler(BaseHandler):
                     param = param_result,
                     advice = manager_advice
                     )
+
+
+class MembersHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        c_user = self.get_current_user()
+        conn = self.application.conn 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from users where mail = '%s';" % c_user)
+        rows = cur.fetchall()
+        try:
+          my_data = rows[0]       ##### (1)
+        except:
+          self.redirect('/auth/login')
+        school = my_data[3]
+        cur.execute("SELECT * FROM(SELECT * FROM users WHERE school = '%s' ORDER BY name ASC) AS A1 ORDER BY grade DESC;" % school)
+        rows = cur.fetchall()
+        members_data = rows
+        self.render("members.html",
+                    u_data = my_data,
+                    members_data = members_data
+                    )
+
+
+
+
 
 class MessageHandler(BaseHandler):
     @tornado.web.authenticated
@@ -393,12 +420,13 @@ class SignUpHandler(BaseHandler):
         u_password = self.get_argument("password")
         u_school = self.get_argument("school")
         u_pos = self.get_argument("pos")
+        u_grade = self.get_argument("grade")
         u_manager = random.randint(0,5)
 
         conn = self.application.conn
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        sql = """insert into users values('%s','%s','%s','%s','%s','','%s');"""
-        cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager))
+        sql = """insert into users values('%s','%s','%s','%s','%s','','%s','%s');"""
+        cur.execute(sql % (u_mail, u_password, u_name, u_school, u_pos, u_manager, u_grade))
         conn.commit()
         
         cur.execute("select school from status where school = '%s';" % u_school)
