@@ -38,7 +38,8 @@ class Application(tornado.web.Application):
             (r'/form',FormHandler),
             (r'/pracform',PracFormHandler),
             (r'/review',ReviewHandler),
-            (r'/members',MembersHandler),
+            (r'/members/all',AllMembersHandler),
+            (r'/members/([1-9]+)',MembersHandler),
         ]
         settings = dict(
             cookie_secret='gaofjawpoer940r34823842398429afadfi4iias',
@@ -192,7 +193,7 @@ class HomeHandler(BaseHandler):
                     )
 
 
-class MembersHandler(BaseHandler):
+class AllMembersHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         c_user = self.get_current_user()
@@ -206,6 +207,27 @@ class MembersHandler(BaseHandler):
           self.redirect('/auth/login')
         school = my_data[3]
         cur.execute("SELECT * FROM(SELECT * FROM users WHERE school = '%s' ORDER BY name ASC) AS A1 ORDER BY grade DESC;" % school)
+        rows = cur.fetchall()
+        members_data = rows
+        self.render("members.html",
+                    u_data = my_data,
+                    members_data = members_data
+                    )
+
+class MembersHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self,grade_number):
+        c_user = self.get_current_user()
+        conn = self.application.conn 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from users where mail = '%s';" % c_user)
+        rows = cur.fetchall()
+        try:
+          my_data = rows[0]       ##### (1)
+        except:
+          self.redirect('/auth/login')
+        school = my_data[3]
+        cur.execute("SELECT * FROM(SELECT * FROM users WHERE school = '%s' ORDER BY name ASC) AS A1 WHERE grade = '%s' ORDER BY grade DESC;" % (school, grade_number))
         rows = cur.fetchall()
         members_data = rows
         self.render("members.html",
